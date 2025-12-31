@@ -20,12 +20,13 @@ class PostController extends Controller
     {
         $sort = $request->query('sort', 'latest');
         $category = $request->query('category');
-        $search = $request->query('search');
+        $search = trim((string) $request->query('search', ''));
 
         $query = Post::with(['category', 'tags', 'comments']);
 
-        if ($search) {
-            $query->where('title', 'LIKE', "%{$search}%");
+        if ($search !== '') {
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+            $query->where('title', 'LIKE', "%{$escaped}%");
         }
 
         if ($category) {
