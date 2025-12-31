@@ -4,13 +4,13 @@
             <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="w-full h-48 object-cover">
         @endif
         <div class="p-6">
-            <div class="flex items-center mb-2 text-sm text-gray-600">
+                <div class="flex items-center mb-2 text-sm text-gray-600">
                 <span>{{ $post->created_at->format('d.m.Y') }}</span>
                 <span class="mx-2">•</span>
-                <span class="text-blue-600">{{ $post->category?->name }}</span>
+                    <span class="text-blue-600">{{ $post->category?->name }}</span>
             </div>
-            <h2 class="text-xl font-semibold mb-2 {{ (!empty($highlight) ? 'text-black' : 'text-gray-900') }}">{{ $post->title }}</h2>
-            <p class="mb-4 {{ (!empty($highlight) ? 'text-black' : 'text-gray-600') }}">{{ \Illuminate\Support\Str::limit($post->content, 150) }}</p>
+                <h2 class="text-xl font-semibold mb-2 text-black">{{ $post->title }}</h2>
+                <p class="mb-4 text-black">{{ \Illuminate\Support\Str::limit($post->content, 150) }}</p>
             <div class="flex items-center justify-between">
                 <div class="flex space-x-2">
                     @foreach ($post->tags as $tag)

@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">Все посты</h1>
+    <h1 class="text-3xl font-bold text-black mb-6">Все посты</h1>
 
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -13,15 +13,15 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <select onchange="window.location.href='?'+(new URLSearchParams(Object.fromEntries(new FormData(document.getElementById(\'filters\'))))).toString()" class="border rounded px-3 py-2" form="filters">
-                <option value="">Все категории</option>
+            <select onchange="window.location.href='?'+(new URLSearchParams(Object.fromEntries(new FormData(document.getElementById(\'filters\'))))).toString()" class="border rounded px-3 py-2 text-black bg-white" form="filters">
+                    <option value="">Все категории</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ (int)$category === $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                 @endforeach
             </select>
 
             <form id="filters" method="GET" action="{{ route('posts.index') }}" class="flex items-center gap-2">
-                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2" />
+                    <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Поиск</button>
             </form>
         </div>
@@ -42,11 +42,11 @@
 
         <aside class="md:w-1/3 mt-6 md:mt-0">
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="font-semibold mb-4">Статистика блога</h3>
+                 <h3 class="text-gray-600 mb-4">Статистика блога</h3>
                 <ul class="space-y-2 text-sm text-gray-700">
-                    <li>Всего постов: <strong class="text-black">{{ $stats['posts'] }}</strong></li>
-                    <li>Всего комментариев: <strong class="text-black">{{ $stats['comments'] }}</strong></li>
-                    <li>Популярный тег: <strong class="text-black">{{ $stats['popular_tag'] ?? '-' }}</strong></li>
+                    <li class="text-black">Всего постов: <strong>{{ $stats['posts'] }}</strong></li>
+                    <li class="text-black">Всего комментариев: <strong>{{ $stats['comments'] }}</strong></li>
+                    <li class="text-black">Популярный тег: <strong>{{ $stats['popular_tag'] ?? '-' }}</strong></li>
                 </ul>
             </div>
         </aside>
