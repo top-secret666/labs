@@ -5,15 +5,16 @@
     <h1 class="text-3xl font-bold text-black mb-6">Все посты</h1>
 
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('posts.index', array_merge(request()->all(), ['sort' => 'latest'])) }}" 
-               class="px-4 py-2 {{ $sort==='latest' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} rounded-md">Новые</a>
-            <a href="{{ route('posts.index', array_merge(request()->all(), ['sort' => 'popular'])) }}" 
-               class="px-4 py-2 {{ $sort==='popular' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} rounded-md">Популярные</a>
-        </div>
+          <div class="flex items-center gap-4">
+                <a href="{{ route('posts.index', array_merge(request()->all(), ['sort' => 'latest'])) }}" data-sort="latest"
+                    class="px-4 py-2 {{ $sort==='latest' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} rounded-md">Новые</a>
+                <a href="{{ route('posts.index', array_merge(request()->all(), ['sort' => 'popular'])) }}" data-sort="popular"
+                    class="px-4 py-2 {{ $sort==='popular' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} rounded-md">Популярные</a>
+          </div>
 
         <div class="flex items-center gap-4">
             <form id="filters" method="GET" action="{{ route('posts.index') }}" class="flex items-center gap-2">
+                <input type="hidden" name="sort" id="sort-input" value="{{ $sort }}">
                 <select name="category" class="border rounded px-3 py-2 text-black bg-white">
                     <option value="">Все категории</option>
                     @foreach($categories as $cat)
@@ -103,6 +104,19 @@
             };
 
             window.addEventListener('scroll', handleScroll);
+
+            // Если пользователь нажимает на ссылку сортировки, отправляем форму с текущими полями
+            document.querySelectorAll('[data-sort]').forEach(el => {
+                el.addEventListener('click', function(e){
+                    const sort = this.getAttribute('data-sort');
+                    const form = document.getElementById('filters');
+                    if (!form) return; // fallback to link
+                    e.preventDefault();
+                    const sortInput = document.getElementById('sort-input');
+                    if (sortInput) sortInput.value = sort;
+                    form.submit();
+                });
+            });
         })();
     </script>
 </div>
