@@ -21,11 +21,16 @@ class PostController extends Controller
         $sort = $request->query('sort', 'latest');
         $category = $request->query('category');
         $search = trim((string) $request->query('search', ''));
+        $mode = $request->query('mode', 'prefix'); // 'prefix' or 'contains'
 
         $query = Post::with(['category', 'tags', 'comments']);
 
         if ($search !== '') {
-            $query->where('title', 'LIKE', "{$search}%");
+            // Case-insensitive for Unicode: lower both sides (SQLite lower() may be limited,
+            // but using mb_strtolower on PHP side helps for the query value).
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $pattern = $mode === 'contains' ? "%{$searchLower}%" : "{$searchLower}%";
+            $query->whereRaw('LOWER(title) LIKE ?', [$pattern]);
         }
 
         if ($category) {

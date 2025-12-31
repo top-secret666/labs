@@ -21,6 +21,10 @@
                         <option value="{{ $cat->id }}" {{ (int)$category === $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                     @endforeach
                 </select>
+                <select name="mode" id="search-mode" class="border rounded px-3 py-2 text-black bg-white">
+                    <option value="prefix" {{ (request('mode','prefix') === 'prefix') ? 'selected' : '' }}>Начинается с</option>
+                    <option value="contains" {{ (request('mode','prefix') === 'contains') ? 'selected' : '' }}>Содержит</option>
+                </select>
 
                 <input id="search-input" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Поиск</button>
