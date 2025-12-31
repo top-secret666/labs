@@ -22,7 +22,7 @@
                     @endforeach
                 </select>
 
-                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
+                <input id="search-input" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Поиск</button>
             </form>
         </div>
@@ -117,6 +117,21 @@
                     form.submit();
                 });
             });
+
+            // Trim search input before submitting the filters form
+            const filtersForm = document.getElementById('filters');
+            if (filtersForm) {
+                filtersForm.addEventListener('submit', function(e){
+                    const si = document.getElementById('search-input');
+                    if (si) {
+                        si.value = si.value.trim();
+                    }
+                    const sortInput = document.getElementById('sort-input');
+                    if (sortInput && !sortInput.value) {
+                        sortInput.value = 'latest';
+                    }
+                });
+            }
         })();
     </script>
 </div>
