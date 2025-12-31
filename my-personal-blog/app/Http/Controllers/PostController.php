@@ -25,7 +25,6 @@ class PostController extends Controller
         $query = Post::with(['category', 'tags', 'comments']);
 
         if ($search !== '') {
-            // Ищем заголовки, которые начинаются с введённого слова (prefix search)
             $query->where('title', 'LIKE', "{$search}%");
         }
 
