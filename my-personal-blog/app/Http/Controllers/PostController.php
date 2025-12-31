@@ -25,8 +25,7 @@ class PostController extends Controller
         $query = Post::with(['category', 'tags', 'comments']);
 
         if ($search !== '') {
-            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
-            $query->where('title', 'LIKE', "%{$escaped}%");
+            $query->where('title', 'LIKE', "%{$search}%");
         }
 
         if ($category) {
