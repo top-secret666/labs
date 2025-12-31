@@ -13,15 +13,15 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <select onchange="window.location.href='?'+(new URLSearchParams(Object.fromEntries(new FormData(document.getElementById(\'filters\'))))).toString()" class="border rounded px-3 py-2 text-black bg-white" form="filters">
-                    <option value="">Все категории</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ (int)$category === $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                @endforeach
-            </select>
-
             <form id="filters" method="GET" action="{{ route('posts.index') }}" class="flex items-center gap-2">
-                    <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
+                <select name="category" class="border rounded px-3 py-2 text-black bg-white">
+                    <option value="">Все категории</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ (int)$category === $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+
+                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск по заголовку" class="border rounded px-3 py-2 text-black bg-white" />
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Поиск</button>
             </form>
         </div>
