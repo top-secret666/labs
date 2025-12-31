@@ -22,7 +22,7 @@
         </div>
 
         <div class="mt-6">
-            <h3 class="font-semibold">Комментарии ({{ $post->comments->count() }})</h3>
+            <h3 class="font-semibold text-black">Комментарии ({{ $post->comments->count() }})</h3>
             <ul class="mt-3 space-y-3">
                 @foreach($post->comments as $comment)
                     <li class="border rounded p-3 bg-gray-50 text-black">{{ $comment->text }}</li>
