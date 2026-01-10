@@ -31,17 +31,12 @@ Route::post('/contact', function (Request $request) {
     return redirect()->route('contact');
 })->name('contact.send');
 
-// Маршруты для создания/редактирования постов
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
-    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
-    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
-});
+// CRUD для постов
+Route::resource('posts', PostController::class)->except(['show']);
+// Отдельный маршрут для просмотра одного поста
+Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
-// Список постов и просмотр
-Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+// (routes for posts are provided by resource above)
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

@@ -8,12 +8,15 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Category;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
     public function create()
     {
-        return view('posts.create');
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+        return view('posts.create', compact('categories', 'tags'));
     }
 
     public function index(Request $request)
@@ -71,69 +74,84 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
+        $validated = $request->validate([
+            'title' => 'required|max:255|unique:posts,title',
+            'content' => 'required|min:50',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|string',
-            'tags' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'integer|exists:tags,id',
+            'image' => 'nullable|image|max:2048',
         ]);
 
+        $data = $validated;
         $data['user_id'] = $request->user()->id ?? 1;
 
+        // Сохраняем пост без изображения
         $post = Post::create($data);
 
-        // Парсинг тэгов: строка через запятую
-        if (!empty($data['tags'])) {
-            $names = array_filter(array_map('trim', explode(',', $data['tags'])));
-            $tagIds = [];
-            foreach ($names as $name) {
-                if ($name === '') continue;
-                $tag = Tag::firstOrCreate(
-                    ['name' => $name],
-                    ['slug' => Str::slug($name)]
-                );
-                $tagIds[] = $tag->id;
-            }
-            if (!empty($tagIds)) {
-                $post->tags()->attach($tagIds);
-            }
+        // Синхронизация тегов (если переданы)
+        if (!empty($validated['tags'])) {
+            $post->tags()->sync($validated['tags']);
         }
 
-        return redirect()->route('home')->with('success', 'Post created');
+        // Загрузка изображения
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('posts', 'public');
+            $post->update(['image' => $path]);
+        }
+
+        return redirect()->route('posts.index')->with('success', 'Пост создан!');
     }
 
     public function edit(Post $post)
     {
-        return view('posts.edit', compact('post'));
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+        return view('posts.edit', compact('post', 'categories', 'tags'));
     }
 
     public function update(Request $request, Post $post)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
+        $validated = $request->validate([
+            'title' => 'required|max:255|unique:posts,title,' . $post->id,
+            'content' => 'required|min:50',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|string',
-            'tags' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'integer|exists:tags,id',
+            'image' => 'nullable|image|max:2048',
+            'remove_image' => 'nullable|boolean',
         ]);
 
-        $post->update($data);
+        $post->update($validated);
 
-        // Обновляем тэги: синхронизируем
-        $names = array_filter(array_map('trim', explode(',', $data['tags'] ?? '')));
-        $tagIds = [];
-        foreach ($names as $name) {
-            if ($name === '') continue;
-            $tag = Tag::firstOrCreate(
-                ['name' => $name],
-                ['slug' => Str::slug($name)]
-            );
-            $tagIds[] = $tag->id;
+        // Синхронизация тегов
+        $post->tags()->sync($validated['tags'] ?? []);
+
+        // Удаление изображения
+        if (!empty($validated['remove_image']) && $post->image) {
+            Storage::disk('public')->delete($post->image);
+            $post->update(['image' => null]);
         }
-        $post->tags()->sync($tagIds);
 
-        return redirect()->route('home')->with('success', 'Post updated');
+        // Обновление изображения
+        if ($request->hasFile('image')) {
+            if ($post->image) {
+                Storage::disk('public')->delete($post->image);
+            }
+            $path = $request->file('image')->store('posts', 'public');
+            $post->update(['image' => $path]);
+        }
+
+        return redirect()->route('posts.index')->with('success', 'Пост обновлен!');
+    }
+
+    public function destroy(Post $post)
+    {
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+        }
+        $post->delete();
+        return redirect()->route('posts.index')->with('success', 'Пост удален!');
     }
 }
 
