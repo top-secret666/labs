@@ -36,4 +36,9 @@ class Post extends Model
     {
         return $this->morphMany(Like::class, 'likeable');
     }
+
+    public function media()
+    {
+        return $this->hasMany(Media::class);
+    }
 }

@@ -32,9 +32,20 @@ Route::post('/contact', function (Request $request) {
 })->name('contact.send');
 
 // CRUD для постов
-Route::resource('posts', PostController::class)->except(['show']);
+// Для регистрации middleware логирования загрузок регистрируем `store` отдельно.
+Route::post('posts', [PostController::class, 'store'])
+    ->name('posts.store')
+    ->middleware(\App\Http\Middleware\LogFileOperations::class);
+Route::resource('posts', PostController::class)->except(['show','store']);
 // Отдельный маршрут для просмотра одного поста
 Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
+
+// Просмотр медиа-файла (редирект на URL статики) и удаление
+Route::get('posts/media/{media}', function (\App\Models\Media $media) {
+    return redirect(\Illuminate\Support\Facades\Storage::disk('s3-fake')->url($media->path));
+})->name('posts.viewFile');
+
+Route::delete('posts/media/{media}', [PostController::class, 'destroyFile'])->name('posts.deleteFile');
 
 // (routes for posts are provided by resource above)
 

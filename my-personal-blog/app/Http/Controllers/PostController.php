@@ -8,7 +8,9 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Category;
+use App\Models\Media;
 use Illuminate\Support\Facades\Storage;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class PostController extends Controller
 {
@@ -81,6 +83,8 @@ class PostController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'integer|exists:tags,id',
             'image' => 'nullable|image|max:2048',
+            'files' => 'nullable|array',
+            'files.*' => 'file|mimes:jpg,png,pdf,mp4|max:5120|no_spaces',
         ]);
 
         $data = $validated;
@@ -96,8 +100,37 @@ class PostController extends Controller
 
         // Загрузка изображения
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('posts', 'public');
+            $image = $request->file('image');
+            if (Str::startsWith($image->getMimeType(), 'image')) {
+                try {
+                    $optimizer = OptimizerChainFactory::create();
+                    $optimizer->optimize($image->getRealPath());
+                } catch (\Throwable $e) {
+                    \Log::warning('Image optimizer failed: ' . $e->getMessage());
+                }
+            }
+            $path = $image->store('posts', 'public');
             $post->update(['image' => $path]);
+        }
+
+        // Загрузка дополнительных файлов (медиа)
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                if (Str::startsWith($file->getMimeType(), 'image')) {
+                    try {
+                        $optimizer = OptimizerChainFactory::create();
+                        $optimizer->optimize($file->getRealPath());
+                    } catch (\Throwable $e) {
+                        \Log::warning('Image optimizer failed: ' . $e->getMessage());
+                    }
+                }
+                $path = $file->store("posts/{$post->id}", 's3-fake');
+                Media::create([
+                    'post_id' => $post->id,
+                    'path' => $path,
+                    'type' => $file->getMimeType(),
+                ]);
+            }
         }
 
         return redirect()->route('posts.index')->with('success', 'Пост создан!');
@@ -119,7 +152,11 @@ class PostController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'integer|exists:tags,id',
             'image' => 'nullable|image|max:2048',
+            'files' => 'nullable|array',
+            'files.*' => 'file|mimes:jpg,png,pdf,mp4|max:5120|no_spaces',
             'remove_image' => 'nullable|boolean',
+            'delete_files' => 'nullable|array',
+            'delete_files.*' => 'integer|exists:media,id',
         ]);
 
         $post->update($validated);
@@ -127,6 +164,15 @@ class PostController extends Controller
         // Синхронизация тегов
         $post->tags()->sync($validated['tags'] ?? []);
 
+        // Удаление выбранных прикреплённых файлов (через форму редактирования)
+        $toDelete = $request->input('delete_files', []);
+        if (!empty($toDelete) && is_array($toDelete)) {
+            $medias = Media::whereIn('id', $toDelete)->where('post_id', $post->id)->get();
+            foreach ($medias as $m) {
+                Storage::disk('s3-fake')->delete($m->path);
+                $m->delete();
+            }
+        }
         // Удаление изображения
         if (!empty($validated['remove_image']) && $post->image) {
             Storage::disk('public')->delete($post->image);
@@ -135,11 +181,40 @@ class PostController extends Controller
 
         // Обновление изображения
         if ($request->hasFile('image')) {
+            $image = $request->file('image');
             if ($post->image) {
                 Storage::disk('public')->delete($post->image);
             }
-            $path = $request->file('image')->store('posts', 'public');
+            if (Str::startsWith($image->getMimeType(), 'image')) {
+                try {
+                    $optimizer = OptimizerChainFactory::create();
+                    $optimizer->optimize($image->getRealPath());
+                } catch (\Throwable $e) {
+                    \Log::warning('Image optimizer failed: ' . $e->getMessage());
+                }
+            }
+            $path = $image->store('posts', 'public');
             $post->update(['image' => $path]);
+        }
+
+        // Загрузка дополнительных файлов при обновлении
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                if (Str::startsWith($file->getMimeType(), 'image')) {
+                    try {
+                        $optimizer = OptimizerChainFactory::create();
+                        $optimizer->optimize($file->getRealPath());
+                    } catch (\Throwable $e) {
+                        \Log::warning('Image optimizer failed: ' . $e->getMessage());
+                    }
+                }
+                $path = $file->store("posts/{$post->id}", 's3-fake');
+                Media::create([
+                    'post_id' => $post->id,
+                    'path' => $path,
+                    'type' => $file->getMimeType(),
+                ]);
+            }
         }
 
         return redirect()->route('posts.index')->with('success', 'Пост обновлен!');
@@ -152,6 +227,13 @@ class PostController extends Controller
         }
         $post->delete();
         return redirect()->route('posts.index')->with('success', 'Пост удален!');
+    }
+
+    public function destroyFile(Media $media)
+    {
+        Storage::disk('s3-fake')->delete($media->path);
+        $media->delete();
+        return back()->with('success', 'Файл удалён!');
     }
 }
 

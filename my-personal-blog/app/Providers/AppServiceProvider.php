@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use App\Models\Category;
 use App\Observers\CategoryObserver;
+use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Регистрируем observer для Category
         Category::observe(CategoryObserver::class);
+
+        // Кастомное правило: запрет пробелов в имени файла
+        Validator::extend('no_spaces', function ($attribute, $value, $parameters) {
+            // Для загружаемых файлов $value — UploadedFile
+            if (is_object($value) && method_exists($value, 'getClientOriginalName')) {
+                return !preg_match('/\s/', $value->getClientOriginalName());
+            }
+            return true;
+        });
     }
 
     protected function configureDefaults(): void

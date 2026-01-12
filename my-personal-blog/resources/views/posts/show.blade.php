@@ -21,6 +21,30 @@
             </div>
         </div>
 
+        @if($post->media->isNotEmpty())
+            <div class="mt-6">
+                <h3 class="font-semibold text-black">Файлы:</h3>
+                <div class="grid grid-cols-3 gap-4 mt-3">
+                    @foreach($post->media as $media)
+                        <div class="relative bg-white border rounded overflow-hidden">
+                            @if (Str::startsWith($media->type, 'image'))
+                                <img src="{{ Storage::disk('s3-fake')->url($media->path) }}" class="w-full h-48 object-cover">
+                            @else
+                                <div class="p-4">
+                                    <p class="text-sm text-black">{{ basename($media->path) }}</p>
+                                    <a href="{{ Storage::disk('s3-fake')->url($media->path) }}" class="text-blue-600 text-sm" target="_blank">Открыть</a>
+                                </div>
+                            @endif
+                            <form method="POST" action="{{ route('posts.deleteFile', $media) }}" class="absolute top-2 right-2">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="bg-red-500 text-white p-1 rounded">×</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <div class="mt-6">
             <h3 class="font-semibold text-black">Комментарии ({{ $post->comments->count() }})</h3>
             <ul class="mt-3 space-y-3">

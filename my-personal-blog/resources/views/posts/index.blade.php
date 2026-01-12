@@ -2,7 +2,10 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold text-black mb-6">Все посты</h1>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-black">Все посты</h1>
+        <a href="{{ route('posts.create') }}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">Создать пост</a>
+    </div>
 
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div class="flex items-center gap-4">

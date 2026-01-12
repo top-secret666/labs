@@ -60,6 +60,15 @@ return [
             'report' => false,
         ],
 
+        's3-fake' => [
+            'driver' => 'local',
+            'root' => storage_path('app/s3-fake'),
+            'url' => rtrim(env('APP_URL'), '\/').'/s3-fake',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
